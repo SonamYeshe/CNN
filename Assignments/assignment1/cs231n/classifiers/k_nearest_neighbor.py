@@ -1,6 +1,7 @@
 from builtins import range
 from builtins import object
 import numpy as np
+import math
 from past.builtins import xrange
 
 
@@ -76,9 +77,10 @@ class KNearestNeighbor(object):
                 # not use a loop over dimension, nor use np.linalg.norm().          #
                 #####################################################################
                 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-                pass
-
+                dists[i,j] = math.sqrt(sum((self.X_train[j,:] - X[i,:])**2))
+                #pass
+        #print(math.sqrt(sum((self.X_train[1,:] - X[1,:])**2)))    
+        #print(self.X_train.shape, self.y_train.shape, X.shape)
                 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return dists
 
@@ -101,7 +103,8 @@ class KNearestNeighbor(object):
             #######################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            #pass
+            dists[i,:] = np.sqrt(np.sum( (self.X_train - X[i,:]) **2, axis = 1) ) #axis=1 makes the matrices added in rows. & np.sum() always returns a row not a column.
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return dists
@@ -131,8 +134,12 @@ class KNearestNeighbor(object):
         #########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
-
+        #pass
+        # expand equation (x-y)^2 = x^2 + y^2 - 2xy
+        dists = np.reshape(np.sum(X**2, axis=1), [num_test,1]) + np.sum(self.X_train**2, axis=1) - 2 * np.matmul(X, self.X_train.T)
+        dists = np.sqrt(dists)
+        # matrix multiplication & two broadcast sums.
+        
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return dists
 
@@ -164,7 +171,16 @@ class KNearestNeighbor(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            #pass
+            indDists = np.argsort(dists[i,:])
+            if k == 1:
+                closest_y = self.y_train[indDists[0]]
+            else: 
+                labelOfTest = self.y_train[indDists[0:k]] # first k elements
+                labelOfTest = labelOfTest.tolist() # change array to list
+                closest_y = max(labelOfTest, key = labelOfTest.count) # Use list.count() function as the key in the max() function, to find the most occurred element in an list.
+                # closest_y = max(set(labelOfTest), key = labelOfTest.count) # change list to set, set has no duplicated elements. However, we want the most occurring element, not the largest element, in the set. So we use list.count() function, find the most occurred element in an list. # It's bad, because set() rearrage the list order!!!
+                #print(labelOfTest, set(labelOfTest), closest_y)
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
             #########################################################################
@@ -176,7 +192,9 @@ class KNearestNeighbor(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            #pass
+            y_pred[i] = closest_y
+            #y_pred[i] = np.bincount(closest_y).argmax() #It's a good funtion but also reversed the original list order.
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
