@@ -36,13 +36,17 @@ def svm_loss_naive(W, X, y, reg):
             margin = scores[j] - correct_class_score + 1 # note delta = 1
             if margin > 0:
                 loss += margin
+                dW[:, j] += X[i] # Added by Jiawei, ds/dW = x
+                dW[:, y[i]] -= X[i] # Added by Jiawei, ds/dW = x
 
     # Right now the loss is a sum over all training examples, but we want it
     # to be an average instead so we divide by num_train.
     loss /= num_train
+    dW /= num_train # Added by Jiawei, L = sum(L_i) / num_train
 
     # Add regularization to the loss.
-    loss += reg * np.sum(W * W)
+    loss += reg * np.sum(W * W) # W*W is element-wise multiplication.
+    dW += reg * 2 * W # Added by Jiawei, d(W^2) = 2*W
 
     #############################################################################
     # TODO:                                                                     #
@@ -78,7 +82,38 @@ def svm_loss_vectorized(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    num_train = X.shape[0]
+    ## build the Multiclass SVM loss fuction
+    scores = X.dot(W)
+    
+    # DUMMY to calculate true scores!!!
+#     yy = np.reshape(y, (num_train, 1))
+#     xx = list(range(num_train)) # 'list' object has no attribute 'shape'
+#     xx = np.reshape(xx, (num_train, 1))
+#     scores -= scores[xx, yy] # this is a matrix broadcast step & the shape of 'scores[xx, yy]' follows the shape of 'xx' and 'yy'
+    
+    # Treasure to calculate true scores!!!
+    scores_true = scores[np.arange(num_train), y].reshape(num_train,1)
+    margin = scores - scores_true + 1
+    
+    # DUMMY to element-wise compare int 0 and a matrix!!!
+#     scores += 1
+#     scores = np.maximum(np.zeros(scores.shape), scores) # np.maximum provides element-wise comparing function
+    
+    # Treasure to element-wise compare int 0 and a matrix!!!
+    margin = np.maximum(margin, 0)
+    
+    # DUMMY to element-wise delete true margins!!!
+#     loss = np.sum(scores) - num_train # extra added 500 should be deducted, because if j=y_i, max(0, s_j - s_y_i + 1) = 1
+    
+    # Treasure to delete true margins one by one!!!
+    margin[np.arange(num_train), y] = 0
+    
+    #loss /= num_train
+    loss = np.sum(margin) / num_train
+    
+    # add the regularization term
+    loss += reg * np.sum(W * W)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -93,7 +128,17 @@ def svm_loss_vectorized(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    # DUMMY to calculate gradient from scratch!!!
+    # num_classes = W.shape[1]
+    # dW[:, np.arange(num_classes)] += np.reshape(np.sum(X, axis = 0), (-1, 1))
+    #dW[:, y] -= 
+
+    X_mask = np.zeros(margin.shape)
+    X_mask[margin > 0] = 1 # margin>0 means inccorect class
+    X_mask[np.arange(num_train), y] = -np.sum(X_mask, axis=1) # Subtract incorrect class (-s_y)
+    dW = X.T.dot(X_mask)
+    dW /= num_train
+    dW += 2 * reg * W
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
