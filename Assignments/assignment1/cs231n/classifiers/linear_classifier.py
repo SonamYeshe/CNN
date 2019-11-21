@@ -57,7 +57,10 @@ class LinearClassifier(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            idx = np.random.choice(num_train, batch_size)
+            X_batch = X[idx]
+            y_batch = y[idx]
+            # print(X_batch.shape, y_batch.shape) # shape confirmed
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -72,7 +75,8 @@ class LinearClassifier(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            # 'learning rate' scales the magnitude of our weight updates in order to minimize the network's loss function
+            self.W -= grad * learning_rate
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -101,8 +105,10 @@ class LinearClassifier(object):
         # Implement this method. Store the predicted labels in y_pred.            #
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        
+        # np.argmax: Returns the indices of the maximum values along an axis.
+        # np.amax: Return the maximum of an array or maximum along an axis.
+        y_pred = np.argmax(X.dot(self.W), 1) 
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return y_pred
