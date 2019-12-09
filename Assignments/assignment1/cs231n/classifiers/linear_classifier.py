@@ -4,7 +4,7 @@ from builtins import range
 from builtins import object
 import numpy as np
 from cs231n.classifiers.linear_svm import *
-from cs231n.classifiers.softmax import *
+from cs231n.classifiers.softmax import * # softmax is calling this train and predict funtions.
 from past.builtins import xrange
 
 

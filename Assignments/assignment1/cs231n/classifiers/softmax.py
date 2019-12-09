@@ -33,7 +33,25 @@ def softmax_loss_naive(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    num_train = X.shape[0]
+    num_class = W.shape[1]
+    scores = X.dot(W)
+    softmax_scores = np.zeros_like(scores)
+    # scores = np.exp(scores) # might be too large! numerical stability is low!
+    for i in range(num_train):
+        softmax_scores[i] = scores[i] - np.max(scores[i])
+        softmax_scores[i] = np.exp(softmax_scores[i])
+        loss_tmp = - np.log( softmax_scores[i, y[i]] / np.sum(softmax_scores[i]) )
+        loss += loss_tmp
+        # Calculus!!
+        for j in range(num_class):
+            dW[:, j] += X[i].T * ( softmax_scores[i, j] / np.sum(softmax_scores[i]) )
+        dW[:, y[i]] -= X[i].T
+        
+    loss /= num_train
+    dW /= num_train
+    loss += reg * np.sum(W * W)      
+    dW += 2 * reg * W
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -58,7 +76,33 @@ def softmax_loss_vectorized(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    num_train = X.shape[0]
+    num_class = W.shape[1]
+    scores = X.dot(W)
+    
+    # Create softmax scores for numerical stability issue.
+    # Stupid way:
+#     scores_row_max = np.max(scores, axis=1)[np.newaxis] # Change 1d array to 2d array.
+#     scores_row_max = np.transpose(scores_row_max)
+#     scores -= scores_row_max
+    # Smart way:
+    scores -= np.max(scores, axis=1, keepdims=True)
+    
+    # Calculate softmax loss.
+    scores = np.exp(scores)
+    softmax = scores / np.sum(scores, axis=1, keepdims=True)
+    loss = np.sum( - np.log( softmax[np.arange(num_train), y] ) )
+    
+    # Calculate softmax gradient.
+    softmax[np.arange(num_train), y] -= 1
+    dW = X.T.dot(softmax)
+#     dW[:, y] -= X[np.arange(num_train), :].T   # This is wrong! why?
+    
+    loss /= num_train
+    dW /= num_train
+    # Add regularization item.
+    loss += reg * np.sum(W * W)
+    dW += 2 * reg * W
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
