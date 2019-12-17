@@ -80,7 +80,13 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        # scores = np.maximum( X.dot(W1), 0 ) + b1 # Wrong!
+        scores_1 = X.dot(W1) + b1 # 1st fully connected
+        scores_2 = np.maximum( scores_1, 0 ) # ReLU
+        scores = scores_2.dot(W2) + b2 # 2nd fully connected
+        
+        #scores = np.maximum( X.dot(W1) + b1, 0 ) # 1st fully connected & ReLU
+        #scores = scores.dot(W2) + b2 # 2nd fully connected
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -98,7 +104,12 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        scores -= np.max(scores, axis = 1, keepdims=True) # Numerical stability.
+        scores_exp = np.exp(scores)
+        scores_exp_row_sum = np.sum(scores_exp, axis = 1)
+        loss = - np.log( scores_exp[np.arange(N), y] / scores_exp_row_sum ) # l_i
+        loss = np.sum(loss) / N
+        loss += reg * np.sum(W1 * W1) + reg * np.sum(W2 * W2) # No matter how many W the nn has, their regularization part directly impact total loss.
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -111,7 +122,20 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        softmax_matrix = scores_exp / np.sum(scores_exp, axis = 1, keepdims=True)
+        softmax_matrix[np.arange(N), y] -= 1
+        softmax_matrix /= N
+        
+        grads['b2'] = np.sum(softmax_matrix, axis = 0)
+        
+        grads['W2'] = scores_2.T.dot(softmax_matrix)
+        grads['W2'] += reg * 2 * W2
+        
+        tmp = softmax_matrix.dot(W2.T) * (scores_1 > 0)
+        grads['W1'] = X.T.dot(tmp)
+        grads['W1'] += reg * 2 * W1
+        
+        grads['b1'] = tmp.sum(axis = 0)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -156,7 +180,9 @@ class TwoLayerNet(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            idx = np.random.choice(num_train, batch_size)
+            X_batch = X[idx]
+            y_batch = y[idx]
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -172,7 +198,8 @@ class TwoLayerNet(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            for key in self.params:
+                self.params[key] -= learning_rate * grads[key]
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -218,7 +245,7 @@ class TwoLayerNet(object):
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        y_pred = np.argmax( self.loss(X), axis=1)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
